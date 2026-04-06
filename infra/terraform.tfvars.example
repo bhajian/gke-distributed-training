@@ -4,4 +4,9 @@ region       = "us-central1"
 node_locations = ["us-central1-a"]
 
 # Set to 4 if you want 4x A100 GPUs (4 nodes x 1 GPU)
-gpu_node_count = 2
+gpu_node_count = 1
+
+# A100 80GB (2 GPUs per node)
+gpu_machine_type = "a2-ultragpu-2g"
+gpu_type         = "nvidia-a100-80gb"
+gpu_count_per_node = 2

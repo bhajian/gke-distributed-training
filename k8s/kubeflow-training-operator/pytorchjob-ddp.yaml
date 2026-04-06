@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kubeflow
+  name: training
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: pytorch-ddp-script
-  namespace: kubeflow
+  namespace: training
 data:
   train.py: |
     import os
@@ -43,7 +43,9 @@ apiVersion: kubeflow.org/v1
 kind: PyTorchJob
 metadata:
   name: pytorch-ddp
-  namespace: kubeflow
+  namespace: training
+  labels:
+    kueue.x-k8s.io/queue-name: training-queue
 spec:
   pytorchReplicaSpecs:
     Master:

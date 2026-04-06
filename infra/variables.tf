@@ -69,21 +69,27 @@ variable "cpu_machine_type" {
 }
 
 variable "gpu_node_count" {
-  description = "GPU node pool size (1x A100 per node)"
+  description = "GPU node pool size"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "gpu_machine_type" {
   description = "GPU node pool machine type"
   type        = string
-  default     = "a2-highgpu-1g"
+  default     = "a2-ultragpu-2g"
 }
 
 variable "gpu_type" {
   description = "GPU accelerator type"
   type        = string
-  default     = "nvidia-tesla-a100"
+  default     = "nvidia-a100-80gb"
+}
+
+variable "gpu_count_per_node" {
+  description = "Number of GPUs per GPU node"
+  type        = number
+  default     = 2
 }
 
 variable "gpu_driver_version" {

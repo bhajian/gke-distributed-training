@@ -42,7 +42,10 @@ node_locations  = ["us-central1-a"]
 cpu_node_count   = 3
 cpu_machine_type = "e2-standard-8"  # or n2-standard-8
 
-gpu_node_count   = 2  # set to 4 for 4x A100
+gpu_node_count   = 1  # 1 node, 2x A100 80GB (a2-ultragpu-2g)
+gpu_machine_type = "a2-ultragpu-2g"
+gpu_type         = "nvidia-a100-80gb"
+gpu_count_per_node = 2
 ```
 
 ### Apply
@@ -82,6 +85,12 @@ Kueue CRDs can exceed the client-side annotation size limit, so use server-side 
 kubectl apply --server-side -f k8s/kueue/manifests.yaml
 ```
 
+Create Kueue queues for gang scheduling:
+```bash
+kubectl create ns training --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -f k8s/kueue/queues.yaml
+```
+
 ### 4.4 Kubeflow Training Operator (use server-side apply)
 Create the namespace first, then use server-side apply because some CRDs exceed the client-side annotation size limit:
 ```bash
@@ -92,15 +101,17 @@ kubectl apply --server-side -k k8s/kubeflow-training-operator
 ### 4.5 PyTorch multi-node DDP test (Training Operator)
 ```bash
 kubectl apply -f k8s/kubeflow-training-operator/pytorchjob-ddp.yaml
-kubectl get pytorchjob -n kubeflow
-kubectl get pods -n kubeflow
+kubectl get pytorchjob -n training
+kubectl get pods -n training
 ```
+This PyTorchJob is labeled with `kueue.x-k8s.io/queue-name: training-queue`, so it is gang scheduled by Kueue.
 
-### 4.6 vLLM Nemotron 3 Super NVFP4 test
+### 4.6 vLLM Nemotron 3 Nano test
 ```bash
 kubectl apply -f k8s/vllm/nemotron-vllm.yaml
 kubectl get pods -n vllm
 ```
+This deployment requests 2 GPUs per pod and uses `--tensor-parallel-size 2`, so it requires a 2‑GPU node (e.g., `a2-ultragpu-2g`).
 
 If you need to pull from Hugging Face private models, create a token secret:
 ```bash

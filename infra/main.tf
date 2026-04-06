@@ -134,7 +134,7 @@ resource "google_container_node_pool" "gpu" {
       for_each = var.enable_guest_accelerator ? [1] : []
       content {
         type  = var.gpu_type
-        count = 1
+        count = var.gpu_count_per_node
 
         gpu_driver_installation_config {
           gpu_driver_version = var.gpu_driver_version

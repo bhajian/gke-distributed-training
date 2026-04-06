@@ -6,23 +6,26 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nemotron-vllm
+  name: nemotron-nano-vllm
   namespace: vllm
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nemotron-vllm
+      app: nemotron-nano-vllm
   template:
     metadata:
       labels:
-        app: nemotron-vllm
+        app: nemotron-nano-vllm
     spec:
       tolerations:
         - key: "nvidia.com/gpu"
           operator: "Equal"
           value: "present"
           effect: "NoSchedule"
+      nodeSelector:
+        cloud.google.com/gke-accelerator: "nvidia-a100-80gb"
+        node.kubernetes.io/instance-type: "a2-ultragpu-2g"
       containers:
         - name: vllm
           image: vllm/vllm-openai:v0.17.1-cu130
@@ -35,38 +38,23 @@ spec:
                   name: hf-token
                   key: token
                   optional: true
-            - name: VLLM_NVFP4_GEMM_BACKEND
-              value: "marlin"
-            - name: VLLM_ALLOW_LONG_MAX_MODEL_LEN
-              value: "1"
-            - name: VLLM_FLASHINFER_ALLREDUCE_BACKEND
-              value: "trtllm"
           command: ["bash", "-lc"]
           args:
             - |
-              vllm serve nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4 \
-                --served-model-name nemotron-3-super \
+              vllm serve nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 \
+                --served-model-name nemotron-3-nano \
                 --host 0.0.0.0 \
                 --port 8000 \
-                --async-scheduling \
-                --dtype auto \
-                --kv-cache-dtype fp8 \
-                --tensor-parallel-size 1 \
-                --pipeline-parallel-size 1 \
-                --data-parallel-size 1 \
+                --dtype bfloat16 \
+                --tensor-parallel-size 2 \
                 --trust-remote-code \
                 --gpu-memory-utilization 0.90 \
-                --enable-chunked-prefill \
-                --max-num-seqs 4 \
-                --max-model-len 394000 \
-                --attention-backend TRITON_ATTN \
-                --mamba_ssm_cache_dtype float32 \
-                --moe-backend marlin
+                --max-model-len 8192
           resources:
             limits:
               cpu: "8"
               memory: "64Gi"
-              nvidia.com/gpu: 1
+              nvidia.com/gpu: 2
             requests:
               cpu: "4"
               memory: "32Gi"
@@ -80,11 +68,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nemotron-vllm
+  name: nemotron-nano-vllm
   namespace: vllm
 spec:
   selector:
-    app: nemotron-vllm
+    app: nemotron-nano-vllm
   ports:
     - name: http
       port: 8000
