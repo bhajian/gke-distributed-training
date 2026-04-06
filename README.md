@@ -131,14 +131,14 @@ kubectl get pods -n training
 
 These PyTorchJobs are labeled with `kueue.x-k8s.io/queue-name: training-queue`, so they are gang scheduled by Kueue.
 
-### 4.6 vLLM Nemotron 3 Nano (single-node)
+### 4.6 vLLM Nemotron 3 Nano (single-node, 2x A100)
 ```bash
 kubectl apply -f k8s/vllm/nemotron-vllm.yaml
 kubectl get pods -n vllm
 ```
 This deployment requests 2 GPUs per pod and uses `--tensor-parallel-size 2`, so it requires a 2‑GPU node (e.g., `a2-highgpu-2g`).
 
-### 4.7 vLLM Nemotron 3 Nano FP8 (multi-node Ray launcher)
+### 4.7 vLLM Nemotron 3 Nano (multi-node Ray launcher, 2x A100 on separate nodes)
 This runs a **single vLLM server** sharded across **2 nodes with 1 GPU each** using Ray.
 
 ```bash
@@ -147,9 +147,57 @@ kubectl apply -f k8s/vllm/nemotron-fp8-multinode-ray.yaml
 kubectl get pods -n vllm -o wide
 ```
 
+Expose vLLM with a LoadBalancer:
+```bash
+kubectl apply -f k8s/vllm/vllm-ray-head-lb.yaml
+kubectl get svc -n vllm -o wide
+```
+
+Test the API:
+```bash
+export VLLM_LB_IP=<EXTERNAL-IP>
+curl http://$VLLM_LB_IP:8000/v1/models
+```
+
 If you need to pull from Hugging Face private models, create a token secret:
 ```bash
 kubectl create secret generic hf-token -n vllm --from-literal=token=YOUR_HF_TOKEN
+```
+
+## 5) Training and fine-tuning (containerized, Kueue + gang scheduling)
+All training workloads are under `training-job/` and run via Kubeflow Training Operator + Kueue.
+
+### 5.1 Build + push images
+Housing price prediction:
+```bash
+cd training-job/housing
+export PROJECT_ID=openenv-8t66t
+./build_and_push.sh
+```
+
+Nemotron 4B LoRA fine-tune:
+```bash
+cd training-job/nemotron4b
+export PROJECT_ID=openenv-8t66t
+./build_and_push.sh
+```
+
+### 5.2 Submit jobs (gang scheduled)
+```bash
+kubectl apply -f training-job/housing/pytorchjob.yaml
+kubectl apply -f training-job/nemotron4b/pytorchjob.yaml
+```
+
+Check status:
+```bash
+kubectl get pytorchjob -n training
+kubectl get pods -n training
+```
+
+If you need to reapply with a different queue label, delete the old job first (queue label is immutable):
+```bash
+kubectl delete pytorchjob -n training housing-price-train
+kubectl delete pytorchjob -n training nemotron4b-healthcare-finetune
 ```
 
 ## Notes
