@@ -98,13 +98,38 @@ kubectl create ns kubeflow --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply --server-side -k k8s/kubeflow-training-operator
 ```
 
-### 4.5 PyTorch multi-node DDP test (Training Operator)
+### 4.5 Training jobs (containerized, multi-node, Kueue gang scheduling)
+All training jobs live under `training-job/` with source code, Dockerfiles, build scripts, and PyTorchJob manifests.
+
+#### 4.5.1 Housing price prediction (DDP, 2x A100)
+Build and push the image:
 ```bash
-kubectl apply -f k8s/kubeflow-training-operator/pytorchjob-ddp.yaml
+cd training-job/housing
+export PROJECT_ID=openenv-8t66t
+./build_and_push.sh
+```
+Submit the job:
+```bash
+kubectl apply -f training-job/housing/pytorchjob.yaml
 kubectl get pytorchjob -n training
 kubectl get pods -n training
 ```
-This PyTorchJob is labeled with `kueue.x-k8s.io/queue-name: training-queue`, so it is gang scheduled by Kueue.
+
+#### 4.5.2 Nemotron 4B healthcare fine-tune (LoRA, DDP, 2x A100)
+Build and push the image:
+```bash
+cd training-job/nemotron4b
+export PROJECT_ID=openenv-8t66t
+./build_and_push.sh
+```
+Submit the job:
+```bash
+kubectl apply -f training-job/nemotron4b/pytorchjob.yaml
+kubectl get pytorchjob -n training
+kubectl get pods -n training
+```
+
+These PyTorchJobs are labeled with `kueue.x-k8s.io/queue-name: training-queue`, so they are gang scheduled by Kueue.
 
 ### 4.6 vLLM Nemotron 3 Nano (single-node)
 ```bash

@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: training
+---
+apiVersion: kubeflow.org/v1
+kind: PyTorchJob
+metadata:
+  name: nemotron4b-healthcare-finetune
+  namespace: training
+  labels:
+    kueue.x-k8s.io/queue-name: training-queue
+spec:
+  runPolicy:
+    suspend: true
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          tolerations:
+            - key: "nvidia.com/gpu"
+              operator: "Equal"
+              value: "present"
+              effect: "NoSchedule"
+          nodeSelector:
+            cloud.google.com/gke-accelerator: "nvidia-tesla-a100"
+          containers:
+            - name: pytorch
+              image: gcr.io/openenv-8t66t/nemotron4b-finetune:latest
+              imagePullPolicy: Always
+              command: ["python", "/workspace/train.py"]
+              env:
+                - name: MODEL_ID
+                  value: "nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16"
+                - name: MAX_STEPS
+                  value: "200"
+                - name: MAX_SEQ_LEN
+                  value: "512"
+                - name: BATCH_SIZE
+                  value: "1"
+                - name: GRAD_ACCUM
+                  value: "8"
+                - name: LR
+                  value: "0.0002"
+                - name: LOG_EVERY
+                  value: "10"
+                - name: MAX_SAMPLES
+                  value: "20000"
+                - name: HF_HUB_DISABLE_TELEMETRY
+                  value: "1"
+              resources:
+                limits:
+                  cpu: "6"
+                  memory: "32Gi"
+                  nvidia.com/gpu: 1
+                requests:
+                  cpu: "4"
+                  memory: "24Gi"
+                  nvidia.com/gpu: 1
+              volumeMounts:
+                - name: hf-cache
+                  mountPath: /root/.cache/huggingface
+          volumes:
+            - name: hf-cache
+              emptyDir: {}
+    Worker:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          tolerations:
+            - key: "nvidia.com/gpu"
+              operator: "Equal"
+              value: "present"
+              effect: "NoSchedule"
+          nodeSelector:
+            cloud.google.com/gke-accelerator: "nvidia-tesla-a100"
+          containers:
+            - name: pytorch
+              image: gcr.io/openenv-8t66t/nemotron4b-finetune:latest
+              imagePullPolicy: Always
+              command: ["python", "/workspace/train.py"]
+              env:
+                - name: MODEL_ID
+                  value: "nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16"
+                - name: MAX_STEPS
+                  value: "200"
+                - name: MAX_SEQ_LEN
+                  value: "512"
+                - name: BATCH_SIZE
+                  value: "1"
+                - name: GRAD_ACCUM
+                  value: "8"
+                - name: LR
+                  value: "0.0002"
+                - name: LOG_EVERY
+                  value: "10"
+                - name: MAX_SAMPLES
+                  value: "20000"
+                - name: HF_HUB_DISABLE_TELEMETRY
+                  value: "1"
+              resources:
+                limits:
+                  cpu: "6"
+                  memory: "32Gi"
+                  nvidia.com/gpu: 1
+                requests:
+                  cpu: "4"
+                  memory: "24Gi"
+                  nvidia.com/gpu: 1
+              volumeMounts:
+                - name: hf-cache
+                  mountPath: /root/.cache/huggingface
+          volumes:
+            - name: hf-cache
+              emptyDir: {}
