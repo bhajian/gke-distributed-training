@@ -168,6 +168,10 @@ kubectl create secret generic hf-token -n vllm --from-literal=token=YOUR_HF_TOKE
 All training workloads are under `training-job/` and run via Kubeflow Training Operator + Kueue.
 
 ### 5.1 Build + push images
+If you are on an ARM Mac, build for amd64:
+```bash
+export PLATFORM=linux/amd64
+```
 Housing price prediction:
 ```bash
 cd training-job/housing
