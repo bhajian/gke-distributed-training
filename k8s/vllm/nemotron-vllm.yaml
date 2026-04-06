@@ -24,8 +24,8 @@ spec:
           value: "present"
           effect: "NoSchedule"
       nodeSelector:
-        cloud.google.com/gke-accelerator: "nvidia-a100-80gb"
-        node.kubernetes.io/instance-type: "a2-ultragpu-2g"
+        cloud.google.com/gke-accelerator: "nvidia-tesla-a100"
+        node.kubernetes.io/instance-type: "a2-highgpu-2g"
       containers:
         - name: vllm
           image: vllm/vllm-openai:v0.17.1-cu130

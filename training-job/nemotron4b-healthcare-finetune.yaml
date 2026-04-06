@@ -1,0 +1,183 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: training
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nemotron4b-healthcare-ft-script
+  namespace: training
+data:
+  finetune.py: |
+    import os
+    import torch
+    from datasets import load_dataset
+    from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, DataCollatorForLanguageModeling
+
+    MODEL_ID = "nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16"
+    DATASET_ID = "dmedhi/wiki-medical-terms"
+
+    def main():
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True, use_fast=True)
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        model = AutoModelForCausalLM.from_pretrained(
+            MODEL_ID,
+            trust_remote_code=True,
+            torch_dtype=torch.bfloat16,
+        )
+        model.config.use_cache = False
+        model.gradient_checkpointing_enable()
+
+        ds = load_dataset(DATASET_ID, split="train")
+        ds = ds.filter(lambda x: x.get("wiki_description") is not None and len(x.get("wiki_description")) > 0)
+        ds = ds.shuffle(seed=42)
+        ds = ds.select(range(min(5000, len(ds))))
+
+        def format_example(ex):
+            term = (ex.get("medical_term") or "").strip()
+            desc = (ex.get("wiki_description") or "").strip()
+            prompt = (
+                "Explain the medical term in plain English. "
+                "Provide general educational information only, not medical advice.\n"
+                f"Term: {term}\nDefinition:"
+            )
+            text = prompt + " " + desc
+            return {"text": text}
+
+        ds = ds.map(format_example, remove_columns=ds.column_names)
+
+        def tokenize(batch):
+            return tokenizer(batch["text"], truncation=True, max_length=512)
+
+        tokenized = ds.map(tokenize, batched=False, remove_columns=["text"])
+        data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+
+        args = TrainingArguments(
+            output_dir="/output/nemotron4b-healthcare",
+            per_device_train_batch_size=1,
+            gradient_accumulation_steps=8,
+            max_steps=300,
+            learning_rate=2e-5,
+            warmup_steps=20,
+            bf16=True,
+            logging_steps=10,
+            save_steps=300,
+            save_total_limit=1,
+            report_to=[],
+            ddp_find_unused_parameters=False,
+        )
+
+        trainer = Trainer(
+            model=model,
+            args=args,
+            train_dataset=tokenized,
+            data_collator=data_collator,
+        )
+
+        trainer.train()
+
+        if trainer.is_world_process_zero():
+            trainer.save_model("/output/nemotron4b-healthcare")
+            tokenizer.save_pretrained("/output/nemotron4b-healthcare")
+            print("Saved fine-tuned model to /output/nemotron4b-healthcare")
+
+
+    if __name__ == "__main__":
+        main()
+---
+apiVersion: kubeflow.org/v1
+kind: PyTorchJob
+metadata:
+  name: nemotron4b-healthcare-ft
+  namespace: training
+spec:
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          tolerations:
+            - key: "nvidia.com/gpu"
+              operator: "Equal"
+              value: "present"
+              effect: "NoSchedule"
+          nodeSelector:
+            cloud.google.com/gke-accelerator: "nvidia-tesla-a100"
+          containers:
+            - name: pytorch
+              image: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: HF_HUB_DISABLE_TELEMETRY
+                  value: "1"
+              command: ["bash", "-lc"]
+              args:
+                - |
+                  pip install -q transformers datasets accelerate && \
+                  torchrun --nproc_per_node=1 \
+                    --nnodes=${WORLD_SIZE} \
+                    --node_rank=${RANK} \
+                    --master_addr=${MASTER_ADDR} \
+                    --master_port=${MASTER_PORT} \
+                    /workspace/finetune.py
+              resources:
+                limits:
+                  cpu: "8"
+                  memory: "64Gi"
+                  nvidia.com/gpu: 1
+              volumeMounts:
+                - name: script
+                  mountPath: /workspace
+                - name: output
+                  mountPath: /output
+          volumes:
+            - name: script
+              configMap:
+                name: nemotron4b-healthcare-ft-script
+            - name: output
+              emptyDir: {}
+    Worker:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          tolerations:
+            - key: "nvidia.com/gpu"
+              operator: "Equal"
+              value: "present"
+              effect: "NoSchedule"
+          nodeSelector:
+            cloud.google.com/gke-accelerator: "nvidia-tesla-a100"
+          containers:
+            - name: pytorch
+              image: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: HF_HUB_DISABLE_TELEMETRY
+                  value: "1"
+              command: ["bash", "-lc"]
+              args:
+                - |
+                  pip install -q transformers datasets accelerate && \
+                  torchrun --nproc_per_node=1 \
+                    --nnodes=${WORLD_SIZE} \
+                    --node_rank=${RANK} \
+                    --master_addr=${MASTER_ADDR} \
+                    --master_port=${MASTER_PORT} \
+                    /workspace/finetune.py
+              resources:
+                limits:
+                  cpu: "8"
+                  memory: "64Gi"
+                  nvidia.com/gpu: 1
+              volumeMounts:
+                - name: script
+                  mountPath: /workspace
+          volumes:
+            - name: script
+              configMap:
+                name: nemotron4b-healthcare-ft-script

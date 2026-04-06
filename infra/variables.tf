@@ -77,13 +77,13 @@ variable "gpu_node_count" {
 variable "gpu_machine_type" {
   description = "GPU node pool machine type"
   type        = string
-  default     = "a2-ultragpu-2g"
+  default     = "a2-highgpu-2g"
 }
 
 variable "gpu_type" {
   description = "GPU accelerator type"
   type        = string
-  default     = "nvidia-a100-80gb"
+  default     = "nvidia-tesla-a100"
 }
 
 variable "gpu_count_per_node" {

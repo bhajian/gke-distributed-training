@@ -1,0 +1,179 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vllm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-ray-head
+  namespace: vllm
+spec:
+  selector:
+    app: vllm-ray-head
+  ports:
+    - name: ray
+      port: 6379
+      targetPort: 6379
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-ray-head
+  namespace: vllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-ray-head
+  template:
+    metadata:
+      labels:
+        app: vllm-ray-head
+    spec:
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Equal"
+          value: "present"
+          effect: "NoSchedule"
+      nodeSelector:
+        cloud.google.com/gke-accelerator: "nvidia-tesla-a100"
+      containers:
+        - name: vllm-head
+          image: vllm/vllm-openai:v0.17.1-cu130
+          ports:
+            - containerPort: 6379
+            - containerPort: 8000
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: RAY_ADDRESS
+              value: "127.0.0.1:6379"
+            - name: HF_HUB_DISABLE_TELEMETRY
+              value: "1"
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: token
+                  optional: true
+            - name: NCCL_SOCKET_IFNAME
+              value: "eth0"
+            - name: GLOO_SOCKET_IFNAME
+              value: "eth0"
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              pip install -q "ray[cgraph]>=2.48.0"
+              ray start --head --port=6379 --node-ip-address=${MY_POD_IP}
+              sleep 20
+              vllm serve nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 \
+                --served-model-name nemotron-3-nano-bf16 \
+                --host 0.0.0.0 \
+                --port 8000 \
+                --tensor-parallel-size 1 \
+                --pipeline-parallel-size 2 \
+                --distributed-executor-backend ray \
+                --max-model-len 8192 \
+                --max-num-seqs 2 \
+                --trust-remote-code \
+                --dtype bfloat16
+          resources:
+            limits:
+              cpu: "8"
+              memory: "64Gi"
+              nvidia.com/gpu: 1
+            requests:
+              cpu: "4"
+              memory: "32Gi"
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /root/.cache/huggingface
+            - name: shm
+              mountPath: /dev/shm
+      volumes:
+        - name: hf-cache
+          emptyDir: {}
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "8Gi"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: vllm-ray-worker
+              topologyKey: "kubernetes.io/hostname"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-ray-worker
+  namespace: vllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-ray-worker
+  template:
+    metadata:
+      labels:
+        app: vllm-ray-worker
+    spec:
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Equal"
+          value: "present"
+          effect: "NoSchedule"
+      nodeSelector:
+        cloud.google.com/gke-accelerator: "nvidia-tesla-a100"
+      containers:
+        - name: ray-worker
+          image: vllm/vllm-openai:v0.17.1-cu130
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: HF_HUB_DISABLE_TELEMETRY
+              value: "1"
+            - name: NCCL_SOCKET_IFNAME
+              value: "eth0"
+            - name: GLOO_SOCKET_IFNAME
+              value: "eth0"
+          command: ["bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              pip install -q "ray[cgraph]>=2.48.0"
+              ray start --address=vllm-ray-head:6379 --node-ip-address=${MY_POD_IP} --block
+          resources:
+            limits:
+              cpu: "4"
+              memory: "16Gi"
+              nvidia.com/gpu: 1
+            requests:
+              cpu: "2"
+              memory: "8Gi"
+          volumeMounts:
+            - name: shm
+              mountPath: /dev/shm
+      volumes:
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "4Gi"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: vllm-ray-head
+              topologyKey: "kubernetes.io/hostname"

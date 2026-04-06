@@ -42,9 +42,9 @@ node_locations  = ["us-central1-a"]
 cpu_node_count   = 3
 cpu_machine_type = "e2-standard-8"  # or n2-standard-8
 
-gpu_node_count   = 1  # 1 node, 2x A100 80GB (a2-ultragpu-2g)
-gpu_machine_type = "a2-ultragpu-2g"
-gpu_type         = "nvidia-a100-80gb"
+gpu_node_count   = 1  # 1 node, 2x A100 40GB (a2-highgpu-2g)
+gpu_machine_type = "a2-highgpu-2g"
+gpu_type         = "nvidia-tesla-a100"
 gpu_count_per_node = 2
 ```
 
@@ -106,12 +106,21 @@ kubectl get pods -n training
 ```
 This PyTorchJob is labeled with `kueue.x-k8s.io/queue-name: training-queue`, so it is gang scheduled by Kueue.
 
-### 4.6 vLLM Nemotron 3 Nano test
+### 4.6 vLLM Nemotron 3 Nano (single-node)
 ```bash
 kubectl apply -f k8s/vllm/nemotron-vllm.yaml
 kubectl get pods -n vllm
 ```
-This deployment requests 2 GPUs per pod and uses `--tensor-parallel-size 2`, so it requires a 2‑GPU node (e.g., `a2-ultragpu-2g`).
+This deployment requests 2 GPUs per pod and uses `--tensor-parallel-size 2`, so it requires a 2‑GPU node (e.g., `a2-highgpu-2g`).
+
+### 4.7 vLLM Nemotron 3 Nano FP8 (multi-node Ray launcher)
+This runs a **single vLLM server** sharded across **2 nodes with 1 GPU each** using Ray.
+
+```bash
+kubectl delete deployment -n vllm nemotron-nano-vllm
+kubectl apply -f k8s/vllm/nemotron-fp8-multinode-ray.yaml
+kubectl get pods -n vllm -o wide
+```
 
 If you need to pull from Hugging Face private models, create a token secret:
 ```bash
