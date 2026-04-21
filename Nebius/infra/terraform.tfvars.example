@@ -5,7 +5,7 @@ subnet_name  = "nebius-ml-subnet"
 subnet_cidr  = "10.100.0.0/16"
 
 cluster_name        = "nebius-ml-cluster"
-kubernetes_version  = "1.31"
+kubernetes_version  = "1.33"
 etcd_cluster_size   = 3
 
 cpu_node_count = 3
@@ -13,8 +13,8 @@ cpu_platform   = "cpu-e2"
 cpu_preset     = "2vcpu-8gb"
 
 gpu_node_count = 1
-gpu_platform   = "gpu-h100-sxm"
-gpu_preset     = ""
+gpu_platform   = "gpu-h200-sxm"
+gpu_preset     = "1gpu-16vcpu-200gb"
 
 # Leave empty if you do not want Terraform to attach a node service account.
 # For private image pulls from Nebius Container Registry, keep the default.

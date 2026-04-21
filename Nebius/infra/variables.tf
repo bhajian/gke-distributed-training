@@ -30,7 +30,7 @@ variable "cluster_name" {
 variable "kubernetes_version" {
   description = "Kubernetes version for control plane (MAJOR.MINOR)"
   type        = string
-  default     = "1.31"
+  default     = "1.33"
 }
 
 variable "etcd_cluster_size" {
@@ -66,13 +66,13 @@ variable "gpu_node_count" {
 variable "gpu_platform" {
   description = "Nebius GPU platform"
   type        = string
-  default     = "gpu-h100-sxm"
+  default     = "gpu-h200-sxm"
 }
 
 variable "gpu_preset" {
   description = "Nebius GPU preset (empty to use provider default)"
   type        = string
-  default     = ""
+  default     = "1gpu-16vcpu-200gb"
 }
 
 variable "node_service_account_name" {
