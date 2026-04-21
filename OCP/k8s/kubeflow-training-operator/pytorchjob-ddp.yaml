@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: training
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pytorch-ddp-script
+  namespace: training
+data:
+  train.py: |
+    import os
+    import torch
+    import torch.distributed as dist
+    from torch import nn
+
+    def main():
+        dist.init_process_group(backend="nccl")
+        local_rank = int(os.environ.get("LOCAL_RANK", "0"))
+        torch.cuda.set_device(local_rank)
+        device = torch.device("cuda", local_rank)
+
+        model = nn.Linear(1024, 1024).to(device)
+        optim = torch.optim.SGD(model.parameters(), lr=0.01)
+
+        for _ in range(10):
+            x = torch.randn(32, 1024, device=device)
+            y = model(x).sum()
+            y.backward()
+            optim.step()
+            optim.zero_grad()
+
+        dist.barrier()
+        if dist.get_rank() == 0:
+            print("DDP test completed")
+        dist.destroy_process_group()
+
+    if __name__ == "__main__":
+        main()
+---
+apiVersion: kubeflow.org/v1
+kind: PyTorchJob
+metadata:
+  name: pytorch-ddp
+  namespace: training
+  labels:
+    kueue.x-k8s.io/queue-name: training-queue
+spec:
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          tolerations:
+            - key: "nvidia.com/gpu"
+              operator: "Equal"
+              value: "present"
+              effect: "NoSchedule"
+          containers:
+            - name: pytorch
+              image: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
+              imagePullPolicy: IfNotPresent
+              command: ["bash", "-lc", "python /workspace/train.py"]
+              env:
+                - name: NCCL_DEBUG
+                  value: "INFO"
+              resources:
+                limits:
+                  cpu: "4"
+                  memory: "16Gi"
+                  nvidia.com/gpu: 1
+              volumeMounts:
+                - name: script
+                  mountPath: /workspace
+          volumes:
+            - name: script
+              configMap:
+                name: pytorch-ddp-script
+    Worker:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          tolerations:
+            - key: "nvidia.com/gpu"
+              operator: "Equal"
+              value: "present"
+              effect: "NoSchedule"
+          containers:
+            - name: pytorch
+              image: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
+              imagePullPolicy: IfNotPresent
+              command: ["bash", "-lc", "python /workspace/train.py"]
+              env:
+                - name: NCCL_DEBUG
+                  value: "INFO"
+              resources:
+                limits:
+                  cpu: "4"
+                  memory: "16Gi"
+                  nvidia.com/gpu: 1
+              volumeMounts:
+                - name: script
+                  mountPath: /workspace
+          volumes:
+            - name: script
+              configMap:
+                name: pytorch-ddp-script

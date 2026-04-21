@@ -1,0 +1,33 @@
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: default
+spec:
+  nodeLabels: {}
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: training-cluster-queue
+spec:
+  cohort: training
+  namespaceSelector: {}
+  resourceGroups:
+    - coveredResources: ["cpu", "memory", "nvidia.com/gpu"]
+      flavors:
+        - name: default
+          resources:
+            - name: cpu
+              nominalQuota: "100"
+            - name: memory
+              nominalQuota: "400Gi"
+            - name: nvidia.com/gpu
+              nominalQuota: "4"
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  name: training-queue
+  namespace: training
+spec:
+  clusterQueue: training-cluster-queue

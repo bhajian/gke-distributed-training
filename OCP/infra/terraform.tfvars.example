@@ -1,0 +1,11 @@
+kubeconfig_path = "~/.kube/config"
+
+openshift_ai_namespace         = "redhat-ods-operator"
+openshift_ai_subscription_name = "rhods-operator"
+openshift_ai_package_name      = "rhods-operator"
+openshift_ai_channel           = "stable"
+
+# Keep false for the first apply. After the operator is installed and CRDs exist,
+# set to true and apply again to create the DataScienceCluster.
+create_datascience_cluster = false
+datascience_cluster_name   = "default-dsc"

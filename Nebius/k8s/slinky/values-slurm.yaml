@@ -1,0 +1,51 @@
+# Slurm chart overrides for GPU + Pyxis
+# Assumes GPU nodes are labeled with: accelerator=nvidia
+
+configFiles:
+  gres.conf: |
+    AutoDetect=nvidia
+  plugstack.conf: |
+    include /usr/share/pyxis/*
+
+loginsets:
+  pyxis:
+    enabled: true
+    replicas: 1
+    login:
+      image:
+        repository: ghcr.io/slinkyproject/login-pyxis
+        tag: 25.11-ubuntu24.04
+      securityContext:
+        privileged: true
+
+nodesets:
+  gpu:
+    enabled: true
+    replicas: 2
+    slurmd:
+      image:
+        repository: ghcr.io/slinkyproject/slurmd-pyxis
+        tag: 25.11-ubuntu24.04
+      resources:
+        requests:
+          cpu: "4"
+          memory: 32Gi
+          nvidia.com/gpu: 1
+        limits:
+          cpu: "8"
+          memory: 64Gi
+          nvidia.com/gpu: 1
+    useResourceLimits: true
+    podSpec:
+      nodeSelector:
+        accelerator: nvidia
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+    partition:
+      enabled: true
+      configMap:
+        State: UP
+        Default: "YES"
+        MaxTime: UNLIMITED
