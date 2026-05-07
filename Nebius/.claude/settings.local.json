@@ -5,7 +5,13 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebSearch",
-      "Bash(chmod +x /Users/behnam/workspace/redhat/distributed-training/Nebius/k8s/nvidia-gpu-operator/install.sh /Users/behnam/workspace/redhat/distributed-training/Nebius/k8s/volcano/install.sh /Users/behnam/workspace/redhat/distributed-training/Nebius/k8s/monitoring/install.sh)"
+      "Bash(chmod +x /Users/behnam/workspace/redhat/distributed-training/Nebius/k8s/nvidia-gpu-operator/install.sh /Users/behnam/workspace/redhat/distributed-training/Nebius/k8s/volcano/install.sh /Users/behnam/workspace/redhat/distributed-training/Nebius/k8s/monitoring/install.sh)",
+      "Bash(git -C /Users/behnam/workspace/redhat/distributed-training/Nebius log --all --oneline --grep=\"key\\\\|\\\\.keys\\\\|private\\\\|public\")",
+      "Bash(git -C /Users/behnam/workspace/redhat/distributed-training/Nebius log --all --oneline -- \".keys/\")",
+      "Bash(git -C /Users/behnam/workspace/redhat/distributed-training/Nebius show fe7ea9c:.keys/)",
+      "Bash(git -C /Users/behnam/workspace/redhat/distributed-training/Nebius show fe7ea9c --stat)",
+      "Bash(git -C /Users/behnam/workspace/redhat/distributed-training/Nebius log --all -p -- \"Nebius/.keys/private.pem\")",
+      "Bash(openssl pkey *)"
     ]
   }
 }
