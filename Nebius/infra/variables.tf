@@ -54,13 +54,13 @@ variable "cpu_platform" {
 variable "cpu_preset" {
   description = "Nebius CPU preset (empty to use provider default)"
   type        = string
-  default     = "2vcpu-8gb"
+  default     = "4vcpu-16gb"
 }
 
 variable "gpu_node_count" {
   description = "GPU node group size"
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "gpu_platform" {
@@ -79,6 +79,12 @@ variable "node_service_account_name" {
   description = "Node group service account name for pulling private Nebius registry images"
   type        = string
   default     = "k8s-node-group-sa"
+}
+
+variable "gpu_drivers_preset" {
+  description = "CUDA driver preset for GPU node boot images (e.g. cuda12)"
+  type        = string
+  default     = "cuda12"
 }
 
 variable "registry_name" {

@@ -8,17 +8,14 @@ kind: PyTorchJob
 metadata:
   name: housing-price-train
   namespace: training
-  labels:
-    kueue.x-k8s.io/queue-name: training-queue
 spec:
-  runPolicy:
-    suspend: true
   pytorchReplicaSpecs:
     Master:
       replicas: 1
       restartPolicy: OnFailure
       template:
         spec:
+          schedulerName: volcano
           tolerations:
             - key: "nvidia.com/gpu"
               operator: "Equal"
@@ -38,6 +35,10 @@ spec:
                   value: "256"
                 - name: LR
                   value: "0.001"
+                - name: NCCL_DEBUG
+                  value: "INFO"
+                - name: NCCL_SOCKET_IFNAME
+                  value: "eth0"
               resources:
                 limits:
                   cpu: "4"
@@ -47,11 +48,20 @@ spec:
                   cpu: "2"
                   memory: "8Gi"
                   nvidia.com/gpu: 1
+              volumeMounts:
+                - name: nvme-storage
+                  mountPath: /mnt/nvme
+          volumes:
+            - name: nvme-storage
+              hostPath:
+                path: /mnt/nvme
+                type: DirectoryOrCreate
     Worker:
       replicas: 1
       restartPolicy: OnFailure
       template:
         spec:
+          schedulerName: volcano
           tolerations:
             - key: "nvidia.com/gpu"
               operator: "Equal"
@@ -71,6 +81,10 @@ spec:
                   value: "256"
                 - name: LR
                   value: "0.001"
+                - name: NCCL_DEBUG
+                  value: "INFO"
+                - name: NCCL_SOCKET_IFNAME
+                  value: "eth0"
               resources:
                 limits:
                   cpu: "4"
@@ -80,3 +94,11 @@ spec:
                   cpu: "2"
                   memory: "8Gi"
                   nvidia.com/gpu: 1
+              volumeMounts:
+                - name: nvme-storage
+                  mountPath: /mnt/nvme
+          volumes:
+            - name: nvme-storage
+              hostPath:
+                path: /mnt/nvme
+                type: DirectoryOrCreate

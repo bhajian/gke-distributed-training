@@ -1,0 +1,8 @@
+scheduler:
+  enabled: true
+
+controller:
+  enabled: true
+
+admission:
+  enabled: true

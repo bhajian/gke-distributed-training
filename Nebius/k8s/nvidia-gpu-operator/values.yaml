@@ -1,0 +1,25 @@
+driver:
+  enabled: true
+
+toolkit:
+  enabled: true
+
+devicePlugin:
+  enabled: true
+
+dcgmExporter:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+
+dcgm:
+  enabled: true
+
+gds:
+  enabled: false
+
+mig:
+  strategy: "none"
+
+node-feature-discovery:
+  enabled: true

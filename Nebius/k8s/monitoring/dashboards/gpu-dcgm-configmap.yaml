@@ -1,0 +1,177 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gpu-dcgm-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  gpu-dcgm.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "links": [],
+      "panels": [
+        {
+          "title": "GPU Utilization",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_GPU_UTIL{namespace=~\"$namespace\",pod=~\"$pod\"}",
+              "legendFormat": "{{exported_pod}} - GPU {{gpu}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100
+            }
+          }
+        },
+        {
+          "title": "GPU Memory Used",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_FB_USED{namespace=~\"$namespace\",pod=~\"$pod\"}",
+              "legendFormat": "{{exported_pod}} - GPU {{gpu}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "decmbytes" }
+          }
+        },
+        {
+          "title": "GPU Memory Free",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_FB_FREE{namespace=~\"$namespace\",pod=~\"$pod\"}",
+              "legendFormat": "{{exported_pod}} - GPU {{gpu}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "decmbytes" }
+          }
+        },
+        {
+          "title": "GPU Temperature",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_GPU_TEMP{namespace=~\"$namespace\",pod=~\"$pod\"}",
+              "legendFormat": "{{exported_pod}} - GPU {{gpu}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "celsius" }
+          }
+        },
+        {
+          "title": "GPU Power Usage",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_POWER_USAGE{namespace=~\"$namespace\",pod=~\"$pod\"}",
+              "legendFormat": "{{exported_pod}} - GPU {{gpu}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "watt" }
+          }
+        },
+        {
+          "title": "GPU SM Clock",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_SM_CLOCK{namespace=~\"$namespace\",pod=~\"$pod\"}",
+              "legendFormat": "{{exported_pod}} - GPU {{gpu}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "hertz" }
+          }
+        },
+        {
+          "title": "Tensor Core Utilization",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{namespace=~\"$namespace\",pod=~\"$pod\"}",
+              "legendFormat": "{{exported_pod}} - GPU {{gpu}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1
+            }
+          }
+        },
+        {
+          "title": "PCIe TX/RX Throughput",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_PROF_PCIE_TX_BYTES{namespace=~\"$namespace\",pod=~\"$pod\"}",
+              "legendFormat": "TX {{exported_pod}} - GPU {{gpu}}"
+            },
+            {
+              "expr": "DCGM_FI_PROF_PCIE_RX_BYTES{namespace=~\"$namespace\",pod=~\"$pod\"}",
+              "legendFormat": "RX {{exported_pod}} - GPU {{gpu}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "Bps" }
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["gpu", "dcgm", "nvidia"],
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(DCGM_FI_DEV_GPU_UTIL, namespace)",
+            "includeAll": true,
+            "multi": true,
+            "current": { "selected": true, "text": "All", "value": "$__all" }
+          },
+          {
+            "name": "pod",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(DCGM_FI_DEV_GPU_UTIL{namespace=~\"$namespace\"}, pod)",
+            "includeAll": true,
+            "multi": true,
+            "current": { "selected": true, "text": "All", "value": "$__all" }
+          }
+        ]
+      },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "NVIDIA DCGM GPU Metrics",
+      "uid": "gpu-dcgm-metrics"
+    }

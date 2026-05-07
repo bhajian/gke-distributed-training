@@ -1,0 +1,34 @@
+grafana:
+  enabled: true
+  adminPassword: "prom-operator"
+  sidecar:
+    dashboards:
+      enabled: true
+      searchNamespace: ALL
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: gpu
+          orgId: 1
+          folder: GPU
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/gpu
+  dashboardsConfigMaps:
+    gpu: gpu-dcgm-dashboard
+
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    retention: 7d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi

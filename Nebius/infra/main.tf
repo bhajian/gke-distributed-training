@@ -86,6 +86,13 @@ resource "nebius_mk8s_v1_node_group" "gpu" {
   template = merge(
     {
       resources = local.gpu_resources
+      boot_disk = {
+        type           = "NETWORK_SSD"
+        size_gibibytes = 200
+      }
+      gpu_settings = {
+        drivers_preset = var.gpu_drivers_preset
+      }
       metadata = {
         labels = {
           accelerator = "nvidia"

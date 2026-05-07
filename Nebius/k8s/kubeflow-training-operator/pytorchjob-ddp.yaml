@@ -44,8 +44,6 @@ kind: PyTorchJob
 metadata:
   name: pytorch-ddp
   namespace: training
-  labels:
-    kueue.x-k8s.io/queue-name: training-queue
 spec:
   pytorchReplicaSpecs:
     Master:
@@ -53,6 +51,7 @@ spec:
       restartPolicy: OnFailure
       template:
         spec:
+          schedulerName: volcano
           tolerations:
             - key: "nvidia.com/gpu"
               operator: "Equal"
@@ -66,6 +65,8 @@ spec:
               env:
                 - name: NCCL_DEBUG
                   value: "INFO"
+                - name: NCCL_SOCKET_IFNAME
+                  value: "eth0"
               resources:
                 limits:
                   cpu: "4"
@@ -74,15 +75,22 @@ spec:
               volumeMounts:
                 - name: script
                   mountPath: /workspace
+                - name: nvme-storage
+                  mountPath: /mnt/nvme
           volumes:
             - name: script
               configMap:
                 name: pytorch-ddp-script
+            - name: nvme-storage
+              hostPath:
+                path: /mnt/nvme
+                type: DirectoryOrCreate
     Worker:
       replicas: 1
       restartPolicy: OnFailure
       template:
         spec:
+          schedulerName: volcano
           tolerations:
             - key: "nvidia.com/gpu"
               operator: "Equal"
@@ -96,6 +104,8 @@ spec:
               env:
                 - name: NCCL_DEBUG
                   value: "INFO"
+                - name: NCCL_SOCKET_IFNAME
+                  value: "eth0"
               resources:
                 limits:
                   cpu: "4"
@@ -104,7 +114,13 @@ spec:
               volumeMounts:
                 - name: script
                   mountPath: /workspace
+                - name: nvme-storage
+                  mountPath: /mnt/nvme
           volumes:
             - name: script
               configMap:
                 name: pytorch-ddp-script
+            - name: nvme-storage
+              hostPath:
+                path: /mnt/nvme
+                type: DirectoryOrCreate

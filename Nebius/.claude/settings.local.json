@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.nebius.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "Bash(chmod +x /Users/behnam/workspace/redhat/distributed-training/Nebius/k8s/nvidia-gpu-operator/install.sh /Users/behnam/workspace/redhat/distributed-training/Nebius/k8s/volcano/install.sh /Users/behnam/workspace/redhat/distributed-training/Nebius/k8s/monitoring/install.sh)"
+    ]
+  }
+}

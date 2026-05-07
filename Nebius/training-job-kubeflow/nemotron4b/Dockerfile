@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Reduce CUDA extension build memory and target A100 (SM80)
 ENV MAX_JOBS=1
-ENV TORCH_CUDA_ARCH_LIST=8.0
+ENV TORCH_CUDA_ARCH_LIST="9.0"
 
 RUN pip install --no-cache-dir \
   "transformers==4.48.3" \

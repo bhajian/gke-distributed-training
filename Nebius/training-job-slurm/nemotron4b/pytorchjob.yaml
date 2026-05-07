@@ -8,11 +8,7 @@ kind: PyTorchJob
 metadata:
   name: nemotron4b-healthcare-finetune
   namespace: training
-  labels:
-    kueue.x-k8s.io/queue-name: training-queue
 spec:
-  runPolicy:
-    suspend: true
   pytorchReplicaSpecs:
     Master:
       replicas: 1
