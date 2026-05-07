@@ -1,0 +1,267 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 820" font-family="'Segoe UI', Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#666"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#ea580c"/>
+    </marker>
+    <linearGradient id="nebius-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0f4ff"/>
+      <stop offset="100%" stop-color="#e8eeff"/>
+    </linearGradient>
+    <linearGradient id="vpc-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff"/>
+      <stop offset="100%" stop-color="#f8fafc"/>
+    </linearGradient>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Nebius Cloud outer box -->
+  <rect x="20" y="15" width="1060" height="790" rx="16" fill="url(#nebius-bg)" stroke="#6366f1" stroke-width="2"/>
+  <text x="40" y="42" font-size="18" font-weight="700" fill="#4338ca">Nebius Cloud</text>
+  <text x="190" y="42" font-size="12" fill="#6366f1">Project</text>
+
+  <!-- VPC Network -->
+  <rect x="40" y="55" width="1020" height="700" rx="12" fill="url(#vpc-bg)" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="60" y="78" font-size="14" font-weight="600" fill="#475569">VPC Network</text>
+  <text x="195" y="78" font-size="11" fill="#94a3b8">10.100.0.0/16</text>
+
+  <!-- MK8s Cluster -->
+  <rect x="60" y="90" width="980" height="540" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="60" y="90" width="980" height="30" rx="10" fill="#3b82f6"/>
+  <rect x="60" y="105" width="980" height="15" fill="#3b82f6"/>
+  <text x="80" y="110" font-size="14" font-weight="700" fill="#fff">MK8s Cluster</text>
+  <text x="230" y="110" font-size="11" fill="#bfdbfe">K8s 1.33 · 3 etcd</text>
+
+  <!-- ============ CPU NODE GROUP ============ -->
+  <rect x="80" y="135" width="440" height="480" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+  <text x="100" y="158" font-size="13" font-weight="700" fill="#166534">CPU Node Group</text>
+  <text x="260" y="158" font-size="11" fill="#4ade80">3x nodes · 4vCPU · 16GB</text>
+
+  <!-- Volcano -->
+  <rect x="100" y="172" width="190" height="80" rx="6" fill="#fff" stroke="#f97316" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="100" y="172" width="190" height="22" rx="6" fill="#f97316"/>
+  <rect x="100" y="184" width="190" height="10" fill="#f97316"/>
+  <text x="115" y="189" font-size="11" font-weight="700" fill="#fff">Volcano</text>
+  <text x="115" y="215" font-size="10" fill="#475569">Scheduler</text>
+  <text x="115" y="228" font-size="10" fill="#475569">Controller</text>
+  <text x="115" y="241" font-size="10" fill="#475569">Admission Webhook</text>
+
+  <!-- Kubeflow Training Operator -->
+  <rect x="310" y="172" width="190" height="80" rx="6" fill="#fff" stroke="#8b5cf6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="310" y="172" width="190" height="22" rx="6" fill="#8b5cf6"/>
+  <rect x="310" y="184" width="190" height="10" fill="#8b5cf6"/>
+  <text x="320" y="189" font-size="11" font-weight="700" fill="#fff">Kubeflow Training Op.</text>
+  <text x="325" y="215" font-size="10" fill="#475569">PyTorchJob CRD</text>
+  <text x="325" y="228" font-size="10" fill="#475569">Gang scheduler: volcano</text>
+  <text x="325" y="241" font-size="10" fill="#475569">Auto PodGroup creation</text>
+
+  <!-- Prometheus -->
+  <rect x="100" y="268" width="190" height="80" rx="6" fill="#fff" stroke="#e11d48" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="100" y="268" width="190" height="22" rx="6" fill="#e11d48"/>
+  <rect x="100" y="280" width="190" height="10" fill="#e11d48"/>
+  <text x="115" y="285" font-size="11" font-weight="700" fill="#fff">Prometheus</text>
+  <text x="115" y="311" font-size="10" fill="#475569">ServiceMonitor discovery</text>
+  <text x="115" y="324" font-size="10" fill="#475569">50Gi storage · 7d retention</text>
+  <text x="115" y="337" font-size="10" fill="#475569">Scrapes DCGM metrics</text>
+
+  <!-- Grafana -->
+  <rect x="310" y="268" width="190" height="80" rx="6" fill="#fff" stroke="#ea580c" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="310" y="268" width="190" height="22" rx="6" fill="#ea580c"/>
+  <rect x="310" y="280" width="190" height="10" fill="#ea580c"/>
+  <text x="325" y="285" font-size="11" font-weight="700" fill="#fff">Grafana</text>
+  <text x="325" y="311" font-size="10" fill="#475569">GPU DCGM Dashboard</text>
+  <text x="325" y="324" font-size="10" fill="#475569">GPU util, memory, temp</text>
+  <text x="325" y="337" font-size="10" fill="#475569">Tensor core, PCIe, power</text>
+
+  <!-- Loki -->
+  <rect x="100" y="364" width="190" height="55" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="100" y="364" width="190" height="22" rx="6" fill="#2563eb"/>
+  <rect x="100" y="376" width="190" height="10" fill="#2563eb"/>
+  <text x="115" y="381" font-size="11" font-weight="700" fill="#fff">Loki + Promtail</text>
+  <text x="115" y="400" font-size="10" fill="#475569">Log aggregation</text>
+  <text x="115" y="412" font-size="10" fill="#475569">Streams pod logs to Grafana</text>
+
+  <!-- Pushgateway -->
+  <rect x="310" y="364" width="190" height="55" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="310" y="364" width="190" height="22" rx="6" fill="#7c3aed"/>
+  <rect x="310" y="376" width="190" height="10" fill="#7c3aed"/>
+  <text x="325" y="381" font-size="11" font-weight="700" fill="#fff">Pushgateway</text>
+  <text x="325" y="400" font-size="10" fill="#475569">Training metrics receiver</text>
+  <text x="325" y="412" font-size="10" fill="#475569">Loss, throughput, GPU mem</text>
+
+  <!-- ============ GPU NODE GROUP ============ -->
+  <rect x="540" y="135" width="480" height="480" rx="8" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+  <text x="560" y="158" font-size="13" font-weight="700" fill="#991b1b">GPU Node Group</text>
+  <text x="705" y="158" font-size="11" fill="#f87171">2x nodes · 1x H200 each · CUDA 12</text>
+
+  <!-- GPU Node 1 -->
+  <rect x="560" y="172" width="215" height="240" rx="6" fill="#fff" stroke="#dc2626" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="560" y="172" width="215" height="22" rx="6" fill="#7c3aed"/>
+  <rect x="560" y="184" width="215" height="10" fill="#7c3aed"/>
+  <text x="575" y="189" font-size="11" font-weight="700" fill="#fff">GPU Node 1 (H200)</text>
+
+  <!-- GPU Operator on Node 1 -->
+  <rect x="572" y="200" width="190" height="42" rx="4" fill="#f5f3ff" stroke="#a78bfa" stroke-width="1"/>
+  <text x="582" y="216" font-size="10" font-weight="600" fill="#5b21b6">GPU Operator</text>
+  <text x="582" y="232" font-size="9" fill="#7c3aed">Device Plugin · DCGM Exporter</text>
+
+  <!-- Training Pod Master -->
+  <rect x="572" y="250" width="190" height="55" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="582" y="267" font-size="10" font-weight="700" fill="#1d4ed8">PyTorchJob Master</text>
+  <text x="582" y="280" font-size="9" fill="#3b82f6">1x GPU · NCCL DDP</text>
+  <text x="582" y="293" font-size="9" fill="#3b82f6">schedulerName: volcano</text>
+
+  <!-- NVMe on Node 1 -->
+  <rect x="572" y="315" width="190" height="42" rx="4" fill="#fefce8" stroke="#facc15" stroke-width="1"/>
+  <rect x="582" y="325" width="14" height="14" rx="2" fill="#eab308"/>
+  <text x="600" y="336" font-size="10" font-weight="600" fill="#854d0e">NVMe /mnt/nvme</text>
+  <text x="582" y="350" font-size="9" fill="#a16207">Local scratch · HF cache</text>
+
+  <!-- GPU Chip icon -->
+  <rect x="572" y="365" width="190" height="36" rx="4" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <text x="582" y="387" font-size="10" font-weight="600" fill="#166534">H200 SXM · 141GB HBM3e</text>
+
+  <!-- GPU Node 2 -->
+  <rect x="790" y="172" width="215" height="240" rx="6" fill="#fff" stroke="#dc2626" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="790" y="172" width="215" height="22" rx="6" fill="#7c3aed"/>
+  <rect x="790" y="184" width="215" height="10" fill="#7c3aed"/>
+  <text x="805" y="189" font-size="11" font-weight="700" fill="#fff">GPU Node 2 (H200)</text>
+
+  <!-- GPU Operator on Node 2 -->
+  <rect x="802" y="200" width="190" height="42" rx="4" fill="#f5f3ff" stroke="#a78bfa" stroke-width="1"/>
+  <text x="812" y="216" font-size="10" font-weight="600" fill="#5b21b6">GPU Operator</text>
+  <text x="812" y="232" font-size="9" fill="#7c3aed">Device Plugin · DCGM Exporter</text>
+
+  <!-- Training Pod Worker -->
+  <rect x="802" y="250" width="190" height="55" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="812" y="267" font-size="10" font-weight="700" fill="#1d4ed8">PyTorchJob Worker</text>
+  <text x="812" y="280" font-size="9" fill="#3b82f6">1x GPU · NCCL DDP</text>
+  <text x="812" y="293" font-size="9" fill="#3b82f6">schedulerName: volcano</text>
+
+  <!-- NVMe on Node 2 -->
+  <rect x="802" y="315" width="190" height="42" rx="4" fill="#fefce8" stroke="#facc15" stroke-width="1"/>
+  <rect x="812" y="325" width="14" height="14" rx="2" fill="#eab308"/>
+  <text x="830" y="336" font-size="10" font-weight="600" fill="#854d0e">NVMe /mnt/nvme</text>
+  <text x="812" y="350" font-size="9" fill="#a16207">Local scratch · HF cache</text>
+
+  <!-- GPU Chip icon -->
+  <rect x="802" y="365" width="190" height="36" rx="4" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <text x="812" y="387" font-size="10" font-weight="600" fill="#166534">H200 SXM · 141GB HBM3e</text>
+
+  <!-- NCCL arrow between GPU nodes -->
+  <line x1="775" y1="277" x2="802" y2="277" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <line x1="802" y1="287" x2="775" y2="287" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <text x="770" y="270" font-size="8" fill="#2563eb" text-anchor="middle" font-weight="600">NCCL</text>
+  <text x="770" y="300" font-size="8" fill="#2563eb" text-anchor="middle">TCP/IP</text>
+
+  <!-- Training Examples box -->
+  <rect x="560" y="420" width="445" height="55" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="575" y="440" font-size="11" font-weight="600" fill="#1e40af">Training Examples</text>
+  <text x="575" y="455" font-size="10" fill="#3b82f6">Housing Price Prediction (DDP, 2 GPUs)</text>
+  <text x="575" y="468" font-size="10" fill="#3b82f6">Nemotron 4B LoRA Fine-tuning (DDP, 2 GPUs, HF datasets)</text>
+
+  <!-- NVMe DaemonSet label -->
+  <rect x="560" y="482" width="445" height="28" rx="4" fill="#fefce8" stroke="#fde047" stroke-width="1"/>
+  <text x="575" y="500" font-size="10" fill="#854d0e" font-weight="600">NVMe DaemonSet</text>
+  <text x="700" y="500" font-size="9" fill="#a16207">Formats & mounts local NVMe on GPU nodes at /mnt/nvme</text>
+
+  <!-- Labels/Taints info -->
+  <rect x="560" y="516" width="445" height="28" rx="4" fill="#faf5ff" stroke="#d8b4fe" stroke-width="1"/>
+  <text x="575" y="534" font-size="10" fill="#6b21a8" font-weight="600">Node Config</text>
+  <text x="660" y="534" font-size="9" fill="#7c3aed">label: accelerator=nvidia · taint: nvidia.com/gpu=present:NoSchedule</text>
+
+  <!-- CPU → GPU scheduling arrow (Volcano) -->
+  <path d="M 500 390 C 530 390, 530 280, 560 280" stroke="#f97316" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow-orange)"/>
+  <text x="510" y="340" font-size="9" fill="#ea580c" font-weight="600" transform="rotate(-50,510,340)">gang schedule</text>
+
+  <!-- Prometheus ← DCGM arrow -->
+  <path d="M 572 220 C 400 205, 320 260, 290 268" stroke="#e11d48" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="415" y="233" font-size="8" fill="#e11d48" font-weight="600">DCGM metrics</text>
+
+  <!-- Prometheus → Grafana arrow -->
+  <line x1="290" y1="308" x2="310" y2="308" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Training pods → Pushgateway arrow -->
+  <path d="M 572 275 C 510 275, 510 385, 500 385" stroke="#7c3aed" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="520" y="320" font-size="8" fill="#7c3aed" font-weight="600" transform="rotate(-70,520,320)">push metrics</text>
+
+  <!-- ============ BOTTOM SECTION: Registry + Optional ============ -->
+
+  <!-- Container Registry -->
+  <rect x="60" y="650" width="280" height="85" rx="8" fill="#fff" stroke="#06b6d4" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="60" y="650" width="280" height="22" rx="8" fill="#06b6d4"/>
+  <rect x="60" y="662" width="280" height="10" fill="#06b6d4"/>
+  <text x="80" y="667" font-size="11" font-weight="700" fill="#fff">Container Registry</text>
+  <text x="80" y="695" font-size="10" fill="#475569">housing-price-train:latest</text>
+  <text x="80" y="710" font-size="10" fill="#475569">nemotron4b-finetune:latest</text>
+  <text x="80" y="725" font-size="9" fill="#94a3b8">cr.eu-north1.nebius.cloud</text>
+
+  <!-- Arrow: Registry → GPU nodes -->
+  <path d="M 340 690 L 540 520" stroke="#06b6d4" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="415" y="610" font-size="9" fill="#0891b2" font-weight="600" transform="rotate(-40,415,610)">image pull</text>
+
+  <!-- Optional: SLURM -->
+  <rect x="380" y="650" width="210" height="85" rx="8" fill="#fff" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3" filter="url(#shadow)"/>
+  <text x="400" y="672" font-size="11" font-weight="600" fill="#64748b">SLURM (Optional)</text>
+  <text x="400" y="692" font-size="10" fill="#94a3b8">Slinky Operator</text>
+  <text x="400" y="705" font-size="10" fill="#94a3b8">Pyxis + Enroot</text>
+  <text x="400" y="718" font-size="10" fill="#94a3b8">sbatch job submission</text>
+
+  <!-- Optional: vLLM -->
+  <rect x="620" y="650" width="210" height="85" rx="8" fill="#fff" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3" filter="url(#shadow)"/>
+  <text x="640" y="672" font-size="11" font-weight="600" fill="#64748b">vLLM Serving (Optional)</text>
+  <text x="640" y="692" font-size="10" fill="#94a3b8">Single-node tensor parallel</text>
+  <text x="640" y="705" font-size="10" fill="#94a3b8">Multi-node Ray cluster</text>
+  <text x="640" y="718" font-size="10" fill="#94a3b8">Nemotron 3 Nano 30B</text>
+
+  <!-- User / kubectl -->
+  <rect x="860" y="650" width="180" height="85" rx="8" fill="#fff" stroke="#475569" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="880" y="672" font-size="11" font-weight="600" fill="#1e293b">User</text>
+  <text x="880" y="692" font-size="10" fill="#475569">kubectl / envsubst</text>
+  <text x="880" y="705" font-size="10" fill="#475569">docker build & push</text>
+  <text x="880" y="718" font-size="10" fill="#475569">terraform apply</text>
+
+  <!-- Arrow: User → Cluster -->
+  <path d="M 950 650 L 950 630" stroke="#475569" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Legend -->
+  <rect x="100" y="435" width="400" height="195" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="120" y="455" font-size="11" font-weight="700" fill="#334155">Component Legend</text>
+
+  <rect x="120" y="465" width="12" height="12" rx="2" fill="#f97316"/>
+  <text x="140" y="476" font-size="10" fill="#475569">Volcano — Gang scheduler for distributed jobs</text>
+
+  <rect x="120" y="483" width="12" height="12" rx="2" fill="#8b5cf6"/>
+  <text x="140" y="494" font-size="10" fill="#475569">Kubeflow — PyTorchJob CRD + Training Operator</text>
+
+  <rect x="120" y="501" width="12" height="12" rx="2" fill="#7c3aed"/>
+  <text x="140" y="512" font-size="10" fill="#475569">GPU Operator — Device plugin + DCGM exporter</text>
+
+  <rect x="120" y="519" width="12" height="12" rx="2" fill="#e11d48"/>
+  <text x="140" y="530" font-size="10" fill="#475569">Prometheus — Metrics collection (scrapes DCGM + Pushgateway)</text>
+
+  <rect x="120" y="537" width="12" height="12" rx="2" fill="#ea580c"/>
+  <text x="140" y="548" font-size="10" fill="#475569">Grafana — GPU + training dashboards + log viewer</text>
+
+  <rect x="120" y="555" width="12" height="12" rx="2" fill="#2563eb"/>
+  <text x="140" y="566" font-size="10" fill="#475569">Loki + Promtail — Log aggregation + streaming to Grafana</text>
+
+  <rect x="120" y="573" width="12" height="12" rx="2" fill="#7c3aed"/>
+  <text x="140" y="584" font-size="10" fill="#475569">Pushgateway — Training metrics (loss, throughput, GPU mem)</text>
+
+  <rect x="120" y="591" width="12" height="12" rx="2" fill="#eab308"/>
+  <text x="140" y="602" font-size="10" fill="#475569">NVMe — Local scratch storage on GPU nodes</text>
+
+  <rect x="120" y="609" width="12" height="12" rx="2" fill="#06b6d4"/>
+  <text x="140" y="620" font-size="10" fill="#475569">Container Registry — Nebius CR for training images</text>
+</svg>

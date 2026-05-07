@@ -1,0 +1,146 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: training-metrics-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  training-metrics.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "graphTooltip": 1,
+      "panels": [
+        {
+          "title": "Training Loss",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "training_loss{job_name=~\"$job_name\"}",
+              "legendFormat": "{{job_name}} ({{model}})"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
+              "color": { "mode": "palette-classic" }
+            }
+          }
+        },
+        {
+          "title": "Validation Loss",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "training_val_loss{job_name=~\"$job_name\"}",
+              "legendFormat": "{{job_name}} ({{model}})"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
+              "color": { "mode": "palette-classic" }
+            }
+          }
+        },
+        {
+          "title": "Training Step Progress",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "expr": "training_step{job_name=~\"$job_name\"}",
+              "legendFormat": "{{job_name}} step"
+            },
+            {
+              "expr": "training_epoch{job_name=~\"$job_name\"}",
+              "legendFormat": "{{job_name}} epoch"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "drawStyle": "line", "lineWidth": 2 }
+            }
+          }
+        },
+        {
+          "title": "Training Throughput (samples/sec)",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "targets": [
+            {
+              "expr": "training_throughput_samples_per_sec{job_name=~\"$job_name\"}",
+              "legendFormat": "{{job_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 15 }
+            }
+          }
+        },
+        {
+          "title": "GPU Memory Used (MB)",
+          "type": "timeseries",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "targets": [
+            {
+              "expr": "training_gpu_memory_used_mb{job_name=~\"$job_name\"}",
+              "legendFormat": "{{job_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "decmbytes",
+              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 }
+            }
+          }
+        },
+        {
+          "title": "Training Logs (Loki)",
+          "type": "logs",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 24 },
+          "targets": [
+            {
+              "expr": "{namespace=\"training\", training_job=~\"$job_name\"} |= ``"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "sortOrder": "Descending",
+            "enableLogDetails": true
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["training", "pytorch", "ml"],
+      "templating": {
+        "list": [
+          {
+            "name": "job_name",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(training_loss, job_name)",
+            "includeAll": true,
+            "multi": true,
+            "current": { "selected": true, "text": "All", "value": "$__all" }
+          }
+        ]
+      },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "Training Metrics",
+      "uid": "training-metrics"
+    }

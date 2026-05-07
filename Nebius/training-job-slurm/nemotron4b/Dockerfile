@@ -20,7 +20,8 @@ RUN pip install --no-cache-dir \
   "peft>=0.12.0" \
   "accelerate>=0.30.1" \
   "sentencepiece>=0.2.0" \
-  "ninja"
+  "ninja" \
+  "prometheus_client>=0.20.0"
 
 # Build-time CUDA extensions; avoid build isolation so it uses the installed Torch/CUDA
 RUN pip install --no-cache-dir --no-build-isolation \

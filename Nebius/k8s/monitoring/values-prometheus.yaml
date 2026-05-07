@@ -5,6 +5,12 @@ grafana:
     dashboards:
       enabled: true
       searchNamespace: ALL
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki.monitoring:3100
+      access: proxy
+      isDefault: false
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
@@ -17,14 +23,29 @@ grafana:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/gpu
+        - name: training
+          orgId: 1
+          folder: Training
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/training
   dashboardsConfigMaps:
     gpu: gpu-dcgm-dashboard
+    training: training-metrics-dashboard
 
 prometheus:
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
     retention: 7d
+    additionalScrapeConfigs:
+      - job_name: pushgateway
+        honor_labels: true
+        static_configs:
+          - targets:
+              - prometheus-pushgateway.monitoring:9091
     storageSpec:
       volumeClaimTemplate:
         spec:

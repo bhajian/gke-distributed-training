@@ -51,6 +51,10 @@ spec:
                   value: "INFO"
                 - name: NCCL_SOCKET_IFNAME
                   value: "eth0"
+                - name: PUSHGATEWAY_URL
+                  value: "http://prometheus-pushgateway.monitoring:9091"
+                - name: JOB_NAME
+                  value: "nemotron4b-healthcare-finetune"
               resources:
                 limits:
                   cpu: "6"

@@ -1,0 +1,26 @@
+config:
+  clients:
+    - url: http://loki.monitoring:3100/loki/api/v1/push
+
+  scrape_configs:
+    - job_name: kubernetes-pods
+      kubernetes_sd_configs:
+        - role: pod
+      pipeline_stages:
+        - cri: {}
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_label_training_kubeflow_org_job_name]
+          target_label: training_job
+        - source_labels: [__meta_kubernetes_pod_label_training_kubeflow_org_replica_type]
+          target_label: replica_type
+        - source_labels: [__meta_kubernetes_namespace]
+          target_label: namespace
+        - source_labels: [__meta_kubernetes_pod_name]
+          target_label: pod
+        - source_labels: [__meta_kubernetes_pod_container_name]
+          target_label: container
+
+tolerations:
+  - key: "nvidia.com/gpu"
+    operator: "Exists"
+    effect: "NoSchedule"

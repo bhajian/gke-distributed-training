@@ -39,6 +39,10 @@ spec:
                   value: "INFO"
                 - name: NCCL_SOCKET_IFNAME
                   value: "eth0"
+                - name: PUSHGATEWAY_URL
+                  value: "http://prometheus-pushgateway.monitoring:9091"
+                - name: JOB_NAME
+                  value: "housing-price-train"
               resources:
                 limits:
                   cpu: "4"

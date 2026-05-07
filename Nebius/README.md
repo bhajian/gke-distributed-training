@@ -4,15 +4,7 @@ Provision a GPU-enabled Kubernetes cluster on Nebius Cloud and run distributed P
 
 ## Architecture
 
-```
-Nebius Project
-├── VPC Network (10.100.0.0/16)
-│   └── MK8s Cluster (K8s 1.33)
-│       ├── 3x CPU nodes (4vCPU, 16GB) ── operators, monitoring
-│       └── 2x GPU nodes (1x H200 each) ── training workloads
-├── Container Registry
-└── NVMe local scratch on GPU nodes (/mnt/nvme)
-```
+![Architecture](docs/images/architecture.svg)
 
 **Kubernetes Stack:**
 - NVIDIA GPU Operator (device plugin + DCGM exporter)
@@ -141,12 +133,19 @@ kubectl get deployment training-operator -n kubeflow -o yaml | grep gang-schedul
 
 You should see `--gang-scheduler-name=volcano` in the container args.
 
-### 3.5 Monitoring (Prometheus + Grafana + DCGM)
+### 3.5 Monitoring (Prometheus + Grafana + Loki + DCGM)
+
+Installs the full monitoring stack: Prometheus, Grafana, Loki (log aggregation), Promtail (log collector), Pushgateway (training metrics), and DCGM dashboards.
 
 ```bash
 ./k8s/monitoring/install.sh
-kubectl apply -f k8s/monitoring/dashboards/gpu-dcgm-configmap.yaml
 ```
+
+This installs:
+- **Prometheus** — scrapes DCGM exporter + Pushgateway metrics
+- **Grafana** — dashboards for GPU metrics and training metrics
+- **Loki + Promtail** — collects and streams pod logs to Grafana
+- **Pushgateway** — receives training metrics (loss, throughput, GPU memory) pushed from training scripts
 
 Access Grafana:
 
@@ -155,7 +154,14 @@ kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80
 ```
 
 Open http://localhost:3000 (credentials: `admin` / `prom-operator`).
-The **NVIDIA DCGM GPU Metrics** dashboard shows GPU utilization, memory, temperature, power, and tensor core activity.
+
+**Dashboards:**
+- **GPU > NVIDIA DCGM GPU Metrics** — GPU utilization, memory, temperature, power, tensor core activity
+- **Training > Training Metrics** — Live loss curves, throughput, GPU memory per training job
+
+**Log streaming:**
+- Go to **Explore** > select **Loki** datasource > query `{namespace="training"}` to see real-time training logs
+- Filter by job: `{namespace="training", training_job="housing-price-train"}`
 
 ### 3.6 Quick DDP Validation
 
@@ -233,15 +239,25 @@ kubectl get pytorchjob -n training
 kubectl logs -n training -l training.kubeflow.org/job-name=nemotron4b-healthcare-finetune --all-containers=true -f
 ```
 
-## 7. Monitor GPU Metrics
+## 7. Monitor Training
 
-During training, open Grafana (see step 3.5) and navigate to **GPU > NVIDIA DCGM GPU Metrics**. Filter by namespace `training` to see real-time:
+During training, open Grafana (see step 3.5):
 
-- GPU utilization (%)
-- GPU memory used/free
+**Training Metrics** (Training > Training Metrics dashboard):
+- Live training/validation loss curves per job
+- Training throughput (samples/sec)
+- GPU memory usage from training script
+- Step/epoch progress
+
+**GPU Hardware Metrics** (GPU > NVIDIA DCGM GPU Metrics dashboard):
+- GPU utilization (%), memory used/free
 - Temperature and power draw
-- Tensor core utilization
-- PCIe throughput
+- Tensor core utilization, PCIe throughput
+
+**Live Log Streaming** (Explore > Loki):
+- Query: `{namespace="training"}` for all training logs
+- Filter by job: `{namespace="training", training_job="housing-price-train"}`
+- Filter by replica: add `replica_type="master"` or `replica_type="worker"`
 
 ## 8. (Optional) SLURM Path
 

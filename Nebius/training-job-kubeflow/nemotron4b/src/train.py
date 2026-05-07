@@ -9,6 +9,8 @@ from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import LoraConfig, get_peft_model
 
+from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
+
 
 def setup_distributed():
     world_size = int(os.environ.get("WORLD_SIZE", "1"))
@@ -21,6 +23,42 @@ def setup_distributed():
     else:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     return device, world_size, rank, local_rank
+
+
+def setup_metrics():
+    pushgateway_url = os.environ.get("PUSHGATEWAY_URL", "")
+    if not pushgateway_url:
+        return None, {}
+
+    registry = CollectorRegistry()
+    job_name = os.environ.get("JOB_NAME", "nemotron4b-finetune")
+    model_id = os.environ.get("MODEL_ID", "nemotron4b")
+    labels = ["job_name", "model"]
+    label_values = [job_name, model_id]
+
+    gauges = {
+        "loss": Gauge("training_loss", "Training loss", labels, registry=registry),
+        "epoch": Gauge("training_epoch", "Current epoch", labels, registry=registry),
+        "step": Gauge("training_step", "Current optimizer step", labels, registry=registry),
+        "throughput": Gauge("training_throughput_samples_per_sec", "Training throughput", labels, registry=registry),
+        "gpu_mem": Gauge("training_gpu_memory_used_mb", "GPU memory used (MB)", labels, registry=registry),
+    }
+
+    return registry, {"gauges": gauges, "label_values": label_values, "url": pushgateway_url, "job": job_name}
+
+
+def push_metrics(metrics_ctx, **kwargs):
+    if not metrics_ctx:
+        return
+    gauges = metrics_ctx["gauges"]
+    lv = metrics_ctx["label_values"]
+    for key, value in kwargs.items():
+        if key in gauges:
+            gauges[key].labels(*lv).set(value)
+    try:
+        push_to_gateway(metrics_ctx["url"], job=metrics_ctx["job"], registry=metrics_ctx.get("registry"))
+    except Exception:
+        pass
 
 
 def format_example(example):
@@ -44,7 +82,6 @@ def tokenize_function(tokenizer, max_length):
             padding="max_length",
         )
         labels = out["input_ids"].copy()
-        # Mask padding tokens
         labels = [lbl if m == 1 else -100 for lbl, m in zip(labels, out["attention_mask"])]
         out["labels"] = labels
         return out
@@ -56,6 +93,13 @@ def main():
     torch.backends.cuda.matmul.allow_tf32 = True
 
     device, world_size, rank, local_rank = setup_distributed()
+
+    registry = None
+    metrics_ctx = {}
+    if rank == 0:
+        registry, metrics_ctx = setup_metrics()
+        if registry:
+            metrics_ctx["registry"] = registry
 
     model_id = os.environ.get("MODEL_ID", "nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16")
     max_steps = int(os.environ.get("MAX_STEPS", "200"))
@@ -79,8 +123,6 @@ def main():
 
     dataset = dataset.map(format_example, remove_columns=dataset.column_names)
 
-    # Some Nemotron tokenizers fail to load with the fast Rust tokenizer.
-    # Try fast first, then fall back to the Python tokenizer.
     try:
         tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=True, trust_remote_code=True)
     except Exception:
@@ -111,8 +153,6 @@ def main():
         low_cpu_mem_usage=True,
         trust_remote_code=True,
     )
-    # Disable gradient checkpointing to avoid DDP "marked ready twice" errors
-    # (LoRA + MoE + checkpointing can trip DDP reducer).
     if hasattr(model, "gradient_checkpointing_disable"):
         model.gradient_checkpointing_disable()
     if hasattr(model, "config"):
@@ -129,7 +169,6 @@ def main():
         )
         model = get_peft_model(model, lora_config)
     except Exception:
-        # Fallback for older PEFT versions: target all Linear modules by name
         linear_module_names = set()
         for name, module in model.named_modules():
             if isinstance(module, torch.nn.Linear):
@@ -147,7 +186,6 @@ def main():
 
     if world_size > 1:
         model = DDP(model, device_ids=[local_rank], output_device=local_rank, find_unused_parameters=True)
-        # Static graph helps with DDP + checkpointing
         try:
             model._set_static_graph()
         except Exception:
@@ -159,6 +197,7 @@ def main():
     step = 0
     optim_step = 0
     start = time.time()
+    step_start = time.time()
 
     while optim_step < max_steps:
         if sampler is not None:
@@ -181,7 +220,13 @@ def main():
                 optim_step += 1
 
                 if rank == 0 and optim_step % log_every == 0:
-                    print(f"step {optim_step}/{max_steps} - loss: {loss.item() * grad_accum:.4f}")
+                    cur_loss = loss.item() * grad_accum
+                    elapsed_steps = time.time() - step_start
+                    throughput = (log_every * per_device_batch * grad_accum) / elapsed_steps if elapsed_steps > 0 else 0
+                    gpu_mem = torch.cuda.memory_allocated(device) / 1024 / 1024
+                    print(f"step {optim_step}/{max_steps} - loss: {cur_loss:.4f} - throughput: {throughput:.1f} samples/s - gpu_mem: {gpu_mem:.0f}MB")
+                    push_metrics(metrics_ctx, loss=cur_loss, step=optim_step, throughput=throughput, gpu_mem=gpu_mem)
+                    step_start = time.time()
 
                 if optim_step >= max_steps:
                     break
